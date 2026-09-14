@@ -2,9 +2,11 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
 from app.routers import search_router, poem_router, challenge_router, generate_router, image_router, video_router, assistant_router, imagery_router
 from app.database import poems_collection, ensure_indexes
 from app.models import Author, Analysis
+from app.middleware.security import security_middleware
 
 
 @asynccontextmanager
@@ -22,14 +24,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS 配置
+# CORS 配置（白名单从环境变量 CORS_ORIGINS 读取，逗号分隔）
+_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 安全中间件：AI 接口鉴权 + 按 IP 限流
+app.middleware("http")(security_middleware)
 
 # 注册路由
 app.include_router(search_router)

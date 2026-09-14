@@ -35,7 +35,7 @@ class ImageGenerateRequest(BaseModel):
 
 class ImagePoemRequest(BaseModel):
     """图生文请求"""
-    image: str = Field(..., description="base64 编码的图片数据")
+    image: str = Field(..., description="base64 编码的图片数据", max_length=8_000_000)
     style: str = Field("古风", description="诗词风格偏好", examples=["唐诗", "宋词", "古风"])
     emotion: str = Field("", description="情感基调（可选）", examples=["思乡", "闲适", "豪放"])
 

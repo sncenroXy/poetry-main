@@ -133,6 +133,19 @@ VISION_POEM_SYSTEM = """你是一位精通中国古典诗词的AI诗人，同时
 只返回 JSON，不要其他内容。"""
 
 
+_ALLOWED_IMAGE_MIME = ("image/jpeg", "image/png", "image/webp")
+
+
+def _validate_image_data(image_base64: str) -> None:
+    """轻量校验：长度已由 pydantic 限制，这里校验 data URI 的 MIME 类型"""
+    if not image_base64 or not image_base64.startswith("data:"):
+        return
+    header = image_base64.split(";", 1)[0]
+    mime = header.split(":", 1)[1] if ":" in header else ""
+    if mime and mime.lower() not in _ALLOWED_IMAGE_MIME:
+        raise ValueError(f"不支持的图片格式: {mime}")
+
+
 async def generate_poem_from_image(
     image_base64: str,
     style: str = "古风",
@@ -148,6 +161,8 @@ async def generate_poem_from_image(
     Returns:
         {"poem": Poem, "scene_description": str}
     """
+    _validate_image_data(image_base64)
+
     # 构建 data URI
     if not image_base64.startswith("data:"):
         image_base64 = f"data:image/jpeg;base64,{image_base64}"

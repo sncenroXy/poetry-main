@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8081
 
+    # 安全配置
+    APP_API_KEY: str = ""  # 非空时，AI 接口需携带 X-API-Key 请求头
+    CORS_ORIGINS: str = "http://localhost:5173"  # 逗号分隔的跨域白名单
+    AI_RATE_LIMIT_PER_MINUTE: int = 30  # AI 文本接口限流（次/分钟/IP）
+    MEDIA_RATE_LIMIT_PER_MINUTE: int = 10  # 图/视频接口限流（次/分钟/IP）
+
     # LLM 配置
     LLM_API_KEY: str = ""
     LLM_BASE_URL: str = "https://api.openai.com/v1"
