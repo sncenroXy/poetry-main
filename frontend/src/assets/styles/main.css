@@ -1,0 +1,363 @@
+@import './chinese-colors.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局基础样式 - Apple + 国风融合 */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: var(--bg-base);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1D1D1F;
+}
+
+/* ===== 全局背景体系 — 宣纸水墨意境 ===== */
+#app {
+  min-height: 100vh;
+  position: relative;
+  /* 基底：暖白宣纸色 + 淡金晕染渐变 */
+  background:
+    /* 层 1：右上角淡金色光晕 */
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(200, 133, 26, 0.06) 0%, transparent 70%),
+    /* 层 2：左下角淡青色光晕 */
+    radial-gradient(ellipse 50% 60% at 10% 85%, rgba(18, 170, 156, 0.04) 0%, transparent 70%),
+    /* 层 3：中部偏左淡朱红色光晕 */
+    radial-gradient(ellipse 40% 40% at 30% 50%, rgba(229, 77, 66, 0.025) 0%, transparent 60%),
+    /* 层 4：顶部向下的暖色微渐变 */
+    linear-gradient(180deg, #FAF7F0 0%, var(--bg-base) 40%, #F8F5EE 100%);
+  background-attachment: fixed;
+}
+
+/* 宣纸纹理层 — 极淡噪点 */
+#app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.015;
+  background-image:
+    /* 细密点阵模拟宣纸肌理 */
+    radial-gradient(circle at 1px 1px, rgba(139, 119, 90, 0.4) 0.5px, transparent 0.5px);
+  background-size: 4px 4px;
+}
+
+/* 装饰纹样层 — 传统云纹 */
+#app::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.018;
+  background-image:
+    /* 云纹 — 右上 */
+    radial-gradient(circle at 80% 10%, #c8851a 1px, transparent 1px),
+    radial-gradient(circle at 82% 12%, #c8851a 0.5px, transparent 0.5px),
+    /* 云纹 — 左下 */
+    radial-gradient(circle at 15% 85%, #12aa9c 1px, transparent 1px),
+    radial-gradient(circle at 17% 83%, #12aa9c 0.5px, transparent 0.5px),
+    /* 散点纹理 — 远景 */
+    radial-gradient(circle at 50% 50%, #c8851a 0.5px, transparent 0.5px),
+    radial-gradient(circle at 25% 30%, #e54d42 0.5px, transparent 0.5px),
+    radial-gradient(circle at 70% 65%, #12aa9c 0.5px, transparent 0.5px);
+  background-size: 200px 200px, 200px 200px, 300px 300px, 300px 300px, 120px 120px, 180px 180px, 150px 150px;
+}
+
+/* 确保内容在装饰层之上 */
+#app > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 响应式内容容器 */
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+@media (min-width: 768px) {
+  .content-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-container {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+/* 阅读区域 - 最佳行宽 */
+.reading-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* 诗词正文专用排版 */
+.poem-body {
+  font-family: 'Noto Serif SC', 'KaiTi', '楷体', 'STKaiti', serif;
+  line-height: 2;
+  letter-spacing: 0.05em;
+}
+
+.poem-title {
+  font-family: 'Noto Serif SC', 'KaiTi', '楷体', 'STKaiti', serif;
+  font-weight: 600;
+}
+
+/* Apple 风格分割线 + Zen-iOS 物理边框 */
+.divider-line {
+  height: 1px;
+  background-color: rgba(200, 133, 26, 0.10);
+  margin: 16px 0;
+}
+
+/* 国风渐变分割线 (精简版) */
+.divider-brush {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200, 133, 26, 0.3), rgba(200, 133, 26, 0.5), rgba(200, 133, 26, 0.3), transparent);
+  margin: 16px 0;
+}
+
+/* Apple 磨砂玻璃卡片 + Zen-iOS 物理深度 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  border-radius: 16px;
+  border: var(--border-card);
+  box-shadow:
+    var(--shadow-card),
+    var(--inset-card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 带国风渐变装饰线的卡片 + Zen-iOS 物理深度 */
+.glass-card-accent {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  border-radius: 16px;
+  border: var(--border-card-strong);
+  box-shadow:
+    var(--shadow-card),
+    var(--inset-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #c8851a, #e54d42);
+}
+
+/* glass-card 响应式增强 */
+@media (min-width: 768px) {
+  .glass-card,
+  .glass-card-accent {
+    border-radius: 20px;
+    box-shadow:
+      var(--shadow-card-lg),
+      var(--inset-card);
+  }
+}
+
+/* glass-card hover 交互 (仅桌面) */
+@media (hover: hover) {
+  .glass-card-hover:hover {
+    box-shadow:
+      var(--shadow-card-hover),
+      var(--inset-card);
+    transform: translateY(-2px);
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+}
+
+/* 页面进入动画 - Apple 风格 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Vant 主题覆盖 - Apple 风格 */
+:root {
+  --van-primary-color: #c8851a;
+  --van-success-color: #12aa9c;
+  --van-danger-color: #e54d42;
+  --van-background: #FAF9F6;
+  --van-background-2: #F2F0EB;
+  --van-nav-bar-background: rgba(250, 247, 240, 0.78);
+  --van-nav-bar-title-font-size: 17px;
+  --van-nav-bar-height: 44px;
+  --van-tab-active-text-color: #c8851a;
+  --van-tabs-bottom-bar-color: #c8851a;
+  --van-button-primary-background: #c8851a;
+  --van-button-primary-border-color: #c8851a;
+  --van-button-border-radius: 10px;
+  --van-cell-background: transparent;
+  --van-field-input-text-color: #1D1D1F;
+  --van-field-placeholder-text-color: #AEAEB2;
+  --van-search-background: transparent;
+  --van-list-text-color: #AEAEB2;
+  --van-list-text-font-size: 13px;
+  --van-list-text-line-height: 40px;
+}
+
+/* 安全区域适配 */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Apple 风格标签 + Zen-iOS 物理感 */
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  background-color: rgba(242, 240, 235, 0.8);
+  color: #1D1D1F;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  border: 1px solid rgba(200, 133, 26, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.tag-item:active {
+  transform: scale(0.96);
+}
+
+.tag-active {
+  background-color: #c8851a;
+  color: white;
+  border-color: #b5760f;
+  box-shadow:
+    0 2px 6px rgba(200, 133, 26, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* === Zen-iOS 工具类 === */
+
+/* 分类标签 — 工业精密排版 */
+.zen-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--color-text-secondary);
+}
+
+/* 物理按钮基础 */
+.zen-btn {
+  border: 1px solid rgba(200, 133, 26, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.15s ease;
+}
+
+.zen-btn:hover {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.zen-btn:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+  transform: scale(0.98);
+}
+
+/* 物理主按钮 */
+.zen-btn-primary {
+  background: linear-gradient(180deg, #d4922e 0%, #c8851a 100%);
+  border: 1px solid #b5760f;
+  color: white;
+  box-shadow:
+    0 2px 6px rgba(200, 133, 26, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.zen-btn-primary:hover {
+  box-shadow:
+    0 4px 12px rgba(200, 133, 26, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.zen-btn-primary:active {
+  background: linear-gradient(180deg, #c8851a 0%, #b5760f 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* 凹陷输入框 */
+.zen-input {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(200, 133, 26, 0.10);
+  border-radius: 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.zen-input:focus,
+.zen-input:focus-within {
+  border-color: rgba(200, 133, 26, 0.25);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.05),
+    0 0 0 3px rgba(200, 133, 26, 0.08);
+}
+
+/* 叠纸效果 */
+.zen-stacked {
+  position: relative;
+}
+
+.zen-stacked::after {
+  content: '';
+  position: absolute;
+  inset: 4px -3px -4px 3px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: inherit;
+  border: 1px solid rgba(200, 133, 26, 0.06);
+  z-index: -1;
+  transform: rotate(0.5deg);
+}
+
+/* 减弱运动偏好适配 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

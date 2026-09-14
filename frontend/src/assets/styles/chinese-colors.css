@@ -1,0 +1,47 @@
+/* Apple + 国风融合 CSS 变量 */
+:root {
+  /* 基础色 */
+  --color-primary: #c8851a;
+  --color-primary-light: #f5d68a;
+  --color-accent: #e54d42;
+  --color-success: #12aa9c;
+
+  /* 背景体系 — 宣纸暖调 */
+  --color-bg: #FAF9F6;
+  --color-bg-secondary: #F2F0EB;
+  --color-bg-warm: #F7F3EC;
+  --color-card: rgba(255, 255, 255, 0.80);
+  --color-card-solid: #FFFFFF;
+  --color-divider: rgba(0, 0, 0, 0.06);
+
+  /* 全局背景渐变 */
+  --bg-base: #FAF9F6;
+  --bg-tint-gold: rgba(200, 133, 26, 0.03);
+  --bg-tint-vermilion: rgba(229, 77, 66, 0.02);
+  --bg-tint-cyan: rgba(18, 170, 156, 0.02);
+
+  /* 文字 */
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-text-tertiary: #AEAEB2;
+
+  /* 国风点缀 */
+  --color-gold: #c8851a;
+  --color-gold-light: #f5d68a;
+  --color-vermilion: #e54d42;
+  --color-cyan: #12aa9c;
+
+  /* Zen-iOS 物理深度 Token */
+  --border-card: 1px solid rgba(200, 133, 26, 0.12);
+  --border-card-strong: 1px solid rgba(200, 133, 26, 0.18);
+  --border-nav: 1px solid rgba(200, 133, 26, 0.14);
+  --border-input: 1px solid rgba(200, 133, 26, 0.12);
+
+  --inset-card: inset 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  --inset-input: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card-lg: 0 4px 12px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-nav: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+}

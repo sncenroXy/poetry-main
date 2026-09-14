@@ -1,0 +1,54 @@
+# ===== 环境与密钥 =====
+.env
+backend/.env
+.claude
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+venv/
+.venv/
+backend/venv/
+
+# ===== Node.js =====
+node_modules/
+frontend/node_modules/
+
+# ===== 构建产物 =====
+frontend/dist/
+dist/
+build/
+
+# ===== Java 旧版（不再使用）=====
+poetry-service/
+
+# ===== 数据集与测试文件 =====
+datasets/
+sample_*.json
+test_*.json
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# ===== OS / 误生成文件 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+
+# ===== Docker 运行时数据 =====
+mongo_data/
+
+# ===== 数据集（体积大，部署时用 scp 单独上传） =====
+poems.json
+
+# ===== 日志 =====
+*.log
+poetry-masterpoetry-mastertest_response.json
