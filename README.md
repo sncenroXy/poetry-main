@@ -206,6 +206,10 @@ bash deploy.sh status   # 查看状态
 | `WEB_PORT` | Nginx 对外端口 | `80` |
 | `MONGODB_URI` | MongoDB 连接地址 | `mongodb://mongo:27017` |
 | `DATABASE_NAME` | 数据库名 | `poetrydb` |
+| `APP_API_KEY` | AI 接口鉴权 Key（非空时启用，前端需同步设 `VITE_API_KEY`） | 空（不鉴权） |
+| `CORS_ORIGINS` | 跨域白名单（逗号分隔） | `http://localhost:5173` |
+| `AI_RATE_LIMIT_PER_MINUTE` | AI 文本接口限流（次/分钟/IP） | `30` |
+| `MEDIA_RATE_LIMIT_PER_MINUTE` | 图/视频接口限流（次/分钟/IP） | `10` |
 | `LLM_API_KEY` | 文本生成 API Key | - |
 | `LLM_BASE_URL` | 文本生成 API 地址 | `https://api.openai.com/v1` |
 | `LLM_MODEL` | 文本生成模型 | `gpt-4o-mini` |

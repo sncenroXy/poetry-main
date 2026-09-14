@@ -3,33 +3,17 @@ import json
 import logging
 import random
 import uuid
-from typing import List, Dict, Any, Optional
-from openai import AsyncOpenAI
+from typing import List, Dict, Any
 from app.config import settings
 from app.database import poems_collection
-from app.models import Poem
-from app.utils.llm import parse_llm_json
+from app.utils.llm import get_llm_client, parse_llm_json
 
 logger = logging.getLogger(__name__)
-
-# ---------- LLM 客户端（复用 LLM 配置） ----------
-
-_client: Optional[AsyncOpenAI] = None
-
-
-def _get_client() -> AsyncOpenAI:
-    global _client
-    if _client is None:
-        _client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
-    return _client
 
 
 async def _chat(system: str, user: str, temperature: float = 0.7) -> str:
     """调用 LLM 并返回文本"""
-    client = _get_client()
+    client = get_llm_client()
     resp = await client.chat.completions.create(
         model=settings.LLM_MODEL,
         messages=[
@@ -48,36 +32,22 @@ async def _chat(system: str, user: str, temperature: float = 0.7) -> str:
 #  原有功能（保留）
 # ============================================================
 
-async def _get_all_poems_content() -> List[Poem]:
-    """获取所有诗词（仅用于接龙功能，不分页）"""
-    poems = []
-    cursor = poems_collection.find({}, {"_id": 1, "title": 1, "content": 1})
-    async for doc in cursor:
-        doc["id"] = doc.pop("_id", doc.get("id"))
-        poems.append(Poem(
-            id=doc["id"],
-            title=doc.get("title", ""),
-            content=doc.get("content", []),
-        ))
-    return poems
-
-
 async def find_next_lines(line: str) -> List[Dict[str, str]]:
-    """查找给定诗句的下句候选"""
+    """查找给定诗句的下句候选（content 数组等值查询，走索引）"""
     if not line or not line.strip():
         return []
 
+    line = line.strip()
     results = []
-    poems = await _get_all_poems_content()
-
-    for p in poems:
-        content = p.content or []
+    cursor = poems_collection.find({"content": line}, {"_id": 1, "title": 1, "content": 1})
+    async for doc in cursor:
+        content = doc.get("content") or []
         for i in range(len(content) - 1):
             if content[i] == line:
                 results.append({
-                    "poemId": p.id,
-                    "title": p.title,
-                    "next": content[i + 1]
+                    "poemId": str(doc.get("_id")),
+                    "title": doc.get("title", ""),
+                    "next": content[i + 1],
                 })
     return results
 
@@ -87,9 +57,10 @@ async def validate_chain(current: str, answer: str) -> bool:
     if not current or not answer:
         return False
 
-    poems = await _get_all_poems_content()
-    for p in poems:
-        content = p.content or []
+    current = current.strip()
+    cursor = poems_collection.find({"content": current}, {"content": 1})
+    async for doc in cursor:
+        content = doc.get("content") or []
         for i in range(len(content) - 1):
             if content[i] == current and content[i + 1] == answer:
                 return True

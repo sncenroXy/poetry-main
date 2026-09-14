@@ -1,52 +1,12 @@
 """诗画互生服务 — 文生图 & 图生文"""
 import logging
 import time
-from typing import Optional, Dict, Any
-from openai import AsyncOpenAI
+from typing import Dict, Any
 from app.config import settings
 from app.models import Poem, Author, Analysis
-from app.utils.llm import parse_llm_json
+from app.utils.llm import get_llm_client, get_image_client, get_vision_client, parse_llm_json
 
 logger = logging.getLogger(__name__)
-
-# ---------- 客户端惰性初始化 ----------
-
-_llm_client: Optional[AsyncOpenAI] = None
-_image_client: Optional[AsyncOpenAI] = None
-_vision_client: Optional[AsyncOpenAI] = None
-
-
-def _get_llm_client() -> AsyncOpenAI:
-    """复用现有文本 LLM 客户端"""
-    global _llm_client
-    if _llm_client is None:
-        _llm_client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
-    return _llm_client
-
-
-def _get_image_client() -> AsyncOpenAI:
-    """图像生成 API 客户端"""
-    global _image_client
-    if _image_client is None:
-        _image_client = AsyncOpenAI(
-            api_key=settings.IMAGE_API_KEY,
-            base_url=settings.IMAGE_BASE_URL,
-        )
-    return _image_client
-
-
-def _get_vision_client() -> AsyncOpenAI:
-    """视觉模型 API 客户端"""
-    global _vision_client
-    if _vision_client is None:
-        _vision_client = AsyncOpenAI(
-            api_key=settings.VISION_API_KEY,
-            base_url=settings.VISION_BASE_URL,
-        )
-    return _vision_client
 
 
 # ---------- 文生图：诗词 → 水墨配图 ----------
@@ -77,7 +37,7 @@ async def generate_image_from_poem(
     if style != "水墨国风":
         user_msg += f"\n画面风格偏好：{style}"
 
-    llm = _get_llm_client()
+    llm = get_llm_client()
     translate_resp = await llm.chat.completions.create(
         model=settings.LLM_MODEL,
         messages=[
@@ -91,7 +51,7 @@ async def generate_image_from_poem(
     logger.info("Image prompt translated: %s", image_prompt[:200])
 
     # 第 2 步：调用图像生成 API
-    img_client = _get_image_client()
+    img_client = get_image_client()
     img_resp = await img_client.images.generate(
         model=settings.IMAGE_MODEL,
         prompt=image_prompt,
@@ -173,7 +133,7 @@ async def generate_poem_from_image(
     if emotion:
         user_content += f"\n情感基调：{emotion}"
 
-    vision = _get_vision_client()
+    vision = get_vision_client()
     resp = await vision.chat.completions.create(
         model=settings.VISION_MODEL,
         messages=[

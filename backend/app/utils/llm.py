@@ -4,7 +4,51 @@ import logging
 import re
 from typing import Any
 
+from openai import AsyncOpenAI
+
+from app.config import settings
+
 logger = logging.getLogger(__name__)
+
+
+# ---------- OpenAI 兼容客户端（统一工厂：超时 + 重试） ----------
+
+_llm_client = None
+_image_client = None
+_vision_client = None
+
+
+def _build_client(api_key: str, base_url: str) -> AsyncOpenAI:
+    return AsyncOpenAI(
+        api_key=api_key,
+        base_url=base_url,
+        timeout=60.0,
+        max_retries=2,
+    )
+
+
+def get_llm_client() -> AsyncOpenAI:
+    """文本 LLM 客户端（生成/润色/仿写/飞花令/答题/助手/意象等复用）"""
+    global _llm_client
+    if _llm_client is None:
+        _llm_client = _build_client(settings.LLM_API_KEY, settings.LLM_BASE_URL)
+    return _llm_client
+
+
+def get_image_client() -> AsyncOpenAI:
+    """图像生成 API 客户端"""
+    global _image_client
+    if _image_client is None:
+        _image_client = _build_client(settings.IMAGE_API_KEY, settings.IMAGE_BASE_URL)
+    return _image_client
+
+
+def get_vision_client() -> AsyncOpenAI:
+    """视觉模型 API 客户端"""
+    global _vision_client
+    if _vision_client is None:
+        _vision_client = _build_client(settings.VISION_API_KEY, settings.VISION_BASE_URL)
+    return _vision_client
 
 
 def parse_llm_json(raw: str) -> Any:

@@ -1,28 +1,12 @@
 """诗境动画服务 — 文生视频（智谱 CogVideoX）"""
 import logging
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import httpx
-from openai import AsyncOpenAI
 from app.config import settings
+from app.utils.llm import get_llm_client
 
 logger = logging.getLogger(__name__)
-
-# ---------- 客户端惰性初始化 ----------
-
-_llm_client: Optional[AsyncOpenAI] = None
-_video_api_key: str = ""
-
-
-def _get_llm_client() -> AsyncOpenAI:
-    """复用现有文本 LLM 客户端"""
-    global _llm_client
-    if _llm_client is None:
-        _llm_client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
-    return _llm_client
 
 
 # ---------- Prompt 翻译 ----------
@@ -44,7 +28,7 @@ async def _translate_poem_to_video_prompt(poem_text: str, title: str = "", style
     if style != "水墨国风":
         user_msg += f"\n画面风格偏好：{style}"
 
-    llm = _get_llm_client()
+    llm = get_llm_client()
     resp = await llm.chat.completions.create(
         model=settings.LLM_MODEL,
         messages=[

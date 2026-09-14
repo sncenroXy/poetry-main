@@ -10,12 +10,18 @@ const request = axios.create({
   }
 })
 
+// AI 接口鉴权 Key（与后端 APP_API_KEY 一致；未配置则不携带）
+const apiKey = import.meta.env.VITE_API_KEY
+
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
     const token = getToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    if (apiKey) {
+      config.headers['X-API-Key'] = apiKey
     }
     return config
   },

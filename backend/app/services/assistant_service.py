@@ -1,23 +1,11 @@
 """AI 诗词助手服务 — 基于 OpenAI 兼容 API"""
 import logging
-from typing import Optional, List, Dict
-from openai import AsyncOpenAI
+from typing import List, Dict
 from app.config import settings
 from app.models.request import AssistantChatRequest
+from app.utils.llm import get_llm_client
 
 logger = logging.getLogger(__name__)
-
-_client: Optional[AsyncOpenAI] = None
-
-
-def _get_client() -> AsyncOpenAI:
-    global _client
-    if _client is None:
-        _client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
-    return _client
 
 
 ASSISTANT_SYSTEM_PROMPT = """你是「诗词雅韵」平台的 AI 诗词助手，一位博学多才的古典文学导师。你精通中国古典诗词的方方面面，能够为用户提供深入、详尽的讲解与指导。
@@ -57,7 +45,7 @@ def _build_messages(req: AssistantChatRequest) -> List[Dict[str, str]]:
 async def chat(req: AssistantChatRequest) -> dict:
     """AI 助手对话入口"""
     try:
-        client = _get_client()
+        client = get_llm_client()
         messages = _build_messages(req)
 
         resp = await client.chat.completions.create(

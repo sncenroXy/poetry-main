@@ -2,31 +2,17 @@
 import logging
 import time
 from typing import List, Optional
-from openai import AsyncOpenAI
 from app.config import settings
 from app.models import Poem, Author, Analysis, GenerationRequest
 from app.database import poems_collection
-from app.utils.llm import parse_llm_json
+from app.utils.llm import get_llm_client, parse_llm_json
 
 logger = logging.getLogger(__name__)
-
-# 初始化 OpenAI 客户端（兼容中转站/NewAPI/OneAPI）
-_client: Optional[AsyncOpenAI] = None
-
-
-def _get_client() -> AsyncOpenAI:
-    global _client
-    if _client is None:
-        _client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
-    return _client
 
 
 async def _chat(system: str, user: str) -> str:
     """调用 LLM 并返回文本"""
-    client = _get_client()
+    client = get_llm_client()
     resp = await client.chat.completions.create(
         model=settings.LLM_MODEL,
         messages=[

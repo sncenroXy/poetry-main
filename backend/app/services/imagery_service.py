@@ -1,24 +1,11 @@
 """诗境漫游 — 意象分析服务"""
 import json
 import logging
-from typing import Optional
-from openai import AsyncOpenAI
 from app.config import settings
 from app.models.request import ImageryAnalyzeRequest
+from app.utils.llm import get_llm_client
 
 logger = logging.getLogger(__name__)
-
-_client: Optional[AsyncOpenAI] = None
-
-
-def _get_client() -> AsyncOpenAI:
-    global _client
-    if _client is None:
-        _client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
-    return _client
 
 
 IMAGERY_SYSTEM_PROMPT = """你是一位古典诗词意象分析专家。用户会给你一首诗词，你需要分析其中的核心意象并以 JSON 格式返回。
@@ -61,7 +48,7 @@ async def analyze(req: ImageryAnalyzeRequest) -> dict:
         poem_desc = f"《{req.title}》" + (f" — {req.author}" if req.author else "") + f"\n{req.poem_text}"
 
     try:
-        client = _get_client()
+        client = get_llm_client()
         resp = await client.chat.completions.create(
             model=settings.LLM_MODEL,
             messages=[

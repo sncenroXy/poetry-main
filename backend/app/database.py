@@ -17,3 +17,4 @@ async def ensure_indexes():
     await poems_collection.create_index("sort_order")
     await poems_collection.create_index("dynasty")
     await poems_collection.create_index("genre")
+    await poems_collection.create_index([("content", 1)])  # 飞花令接龙等值查询
