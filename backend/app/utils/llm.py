@@ -51,31 +51,100 @@ def get_vision_client() -> AsyncOpenAI:
     return _vision_client
 
 
-def parse_llm_json(raw: str) -> Any:
-    """从 LLM 返回的文本中提取 JSON，支持 markdown 代码块容错
+async def chat_json(
+    system: str,
+    user: str,
+    temperature: float = 0.7,
+    max_tokens: int = 2000,
+    client: AsyncOpenAI | None = None,
+) -> str:
+    """调用 LLM 并要求 JSON 输出，返回原始文本（仍需 parse_llm_json 解析）。
 
-    尝试策略：
-    1. 去除 markdown 代码块后直接 json.loads
-    2. 使用正则按字段名边界提取（针对格式不完整的情况）
+    优先传 response_format={"type": "json_object"} 让模型直接输出合法 JSON；
+    部分 OpenAI 兼容接口不支持该参数，会自动降级重试。
     """
-    text = raw.strip()
-    # 去除 markdown 代码块
+    client = client or get_llm_client()
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
+    ]
+    kwargs = dict(model=settings.LLM_MODEL, messages=messages, temperature=temperature, max_tokens=max_tokens)
+    try:
+        resp = await client.chat.completions.create(**kwargs, response_format={"type": "json_object"})
+    except Exception as e:
+        logger.warning("response_format=json_object unsupported, retrying without it: %s", e)
+        resp = await client.chat.completions.create(**kwargs)
+    return (resp.choices[0].message.content or "").strip()
+
+
+def _strip_fences(text: str) -> str:
+    """去除 markdown 代码块包裹及 ``json`` 前缀"""
+    text = text.strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[1] if "\n" in text else text[3:]
     if text.endswith("```"):
         text = text[:-3]
     text = text.strip()
-    if text.startswith("json"):
+    if text.lower().startswith("json"):
         text = text[4:].strip()
+    return text
 
-    # 第一次尝试：直接解析
+
+def _extract_json_slice(text: str) -> str:
+    """定位首个 { 或 [ 到最后一个 } 或 ]，容忍 JSON 前后的废话"""
+    start = -1
+    end = -1
+    for i, ch in enumerate(text):
+        if ch in "{[":
+            start = i
+            break
+    for i in range(len(text) - 1, -1, -1):
+        if text[i] in "}]":
+            end = i
+            break
+    if start != -1 and end > start:
+        return text[start:end + 1]
+    return ""
+
+
+def parse_llm_json(raw: str) -> Any:
+    """从 LLM 返回的文本中提取 JSON，多级容错：
+
+    1. 去除 markdown 代码块后直接 json.loads
+    2. 定位首 { / [ 到末 } / ] 切片后 json.loads（容忍前后废话）
+    3. json5 宽松解析（容忍尾逗号/单引号/注释）
+    4. 正则按字段名边界提取（最后兜底，针对格式不完整的情况）
+    """
+    text = _strip_fences(raw)
+
+    # 1) 直接解析
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # 第二次尝试：用字段名作为边界切割
-    logger.warning("Standard JSON parse failed, trying field extraction: %s", text[:300])
+    # 2) 括号切片解析（容忍 JSON 前后的说明文字）
+    sliced = _extract_json_slice(text)
+    if sliced and sliced != text:
+        try:
+            return json.loads(sliced)
+        except json.JSONDecodeError:
+            pass
+
+    # 3) json5 宽松解析
+    try:
+        import json5
+        return json5.loads(sliced or text)
+    except Exception:
+        pass
+
+    # 4) 正则字段提取兜底
+    logger.warning("JSON parse failed, falling back to field extraction: %s", text[:300])
+    return _parse_json_by_fields(text)
+
+
+def _parse_json_by_fields(text: str) -> Any:
+    """正则按字段名边界切割（针对格式不完整、无法整体解析的情况）"""
     known_keys = [
         "title", "genre", "content", "scene_description",
         "translation", "appreciation", "cultural",

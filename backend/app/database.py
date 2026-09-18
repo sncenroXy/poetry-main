@@ -18,3 +18,4 @@ async def ensure_indexes():
     await poems_collection.create_index("dynasty")
     await poems_collection.create_index("genre")
     await poems_collection.create_index([("content", 1)])  # 飞花令接龙等值查询
+    await poems_collection.create_index("keywords")  # 检索倒排（jieba 分词，多键索引）

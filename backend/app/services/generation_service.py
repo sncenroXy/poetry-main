@@ -2,27 +2,16 @@
 import logging
 import time
 from typing import List, Optional
-from app.config import settings
 from app.models import Poem, Author, Analysis, GenerationRequest
 from app.database import poems_collection
-from app.utils.llm import get_llm_client, parse_llm_json
+from app.utils.llm import chat_json, parse_llm_json
 
 logger = logging.getLogger(__name__)
 
 
 async def _chat(system: str, user: str) -> str:
-    """调用 LLM 并返回文本"""
-    client = get_llm_client()
-    resp = await client.chat.completions.create(
-        model=settings.LLM_MODEL,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        temperature=0.8,
-        max_tokens=2000,
-    )
-    result = (resp.choices[0].message.content or "").strip()
+    """调用 LLM 并返回文本（强制 JSON 输出）"""
+    result = await chat_json(system, user, temperature=0.8, max_tokens=2000)
     logger.debug("LLM raw response: %s", result[:500])
     return result
 

@@ -14,6 +14,8 @@ import json
 import hashlib
 import pymongo
 
+from app.utils.tokenizer import tokenize
+
 # Windows 终端中文输出
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
@@ -76,6 +78,12 @@ def generate_id(dtype, title, author):
     return f"{dtype}-{h}"
 
 
+def build_keywords(title: str, author_name: str, content_lines, tags) -> list:
+    """为诗词构建检索关键词（jieba 分词倒排）"""
+    text = " ".join([title, author_name, " ".join(content_lines), " ".join(tags)])
+    return tokenize(text)
+
+
 def detect_genre(content_lines):
     """根据句式初步判断体裁"""
     if not content_lines:
@@ -121,6 +129,8 @@ def convert_tang_poem(item):
     if genre:
         doc["tags"].append(genre)
 
+    doc["keywords"] = build_keywords(title, author_name, paragraphs, doc["tags"])
+
     return doc
 
 
@@ -146,6 +156,8 @@ def convert_ci(item):
         "tags": ["宋词", rhythmic],
         "analysis": {},
     }
+
+    doc["keywords"] = build_keywords(rhythmic, author_name, paragraphs, doc["tags"])
 
     return doc
 

@@ -4,26 +4,15 @@ import logging
 import random
 import uuid
 from typing import List, Dict, Any
-from app.config import settings
 from app.database import poems_collection
-from app.utils.llm import get_llm_client, parse_llm_json
+from app.utils.llm import chat_json, parse_llm_json
 
 logger = logging.getLogger(__name__)
 
 
 async def _chat(system: str, user: str, temperature: float = 0.7) -> str:
-    """调用 LLM 并返回文本"""
-    client = get_llm_client()
-    resp = await client.chat.completions.create(
-        model=settings.LLM_MODEL,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        temperature=temperature,
-        max_tokens=2000,
-    )
-    result = (resp.choices[0].message.content or "").strip()
+    """调用 LLM 并返回文本（强制 JSON 输出）"""
+    result = await chat_json(system, user, temperature=temperature, max_tokens=2000)
     logger.debug("Challenge LLM raw: %s", result[:500])
     return result
 
@@ -31,6 +20,23 @@ async def _chat(system: str, user: str, temperature: float = 0.7) -> str:
 # ============================================================
 #  原有功能（保留）
 # ============================================================
+
+def match_next_lines(content: List[str], line: str) -> List[str]:
+    """纯函数：在 content 列表中找到 line 的所有下句"""
+    if not line or not content:
+        return []
+    return [content[i + 1] for i in range(len(content) - 1) if content[i] == line]
+
+
+def is_valid_next(content: List[str], current: str, answer: str) -> bool:
+    """纯函数：判断 answer 是否为 current 的下一句"""
+    if not current or not answer or not content:
+        return False
+    return any(
+        content[i] == current and content[i + 1] == answer
+        for i in range(len(content) - 1)
+    )
+
 
 async def find_next_lines(line: str) -> List[Dict[str, str]]:
     """查找给定诗句的下句候选（content 数组等值查询，走索引）"""
@@ -42,13 +48,12 @@ async def find_next_lines(line: str) -> List[Dict[str, str]]:
     cursor = poems_collection.find({"content": line}, {"_id": 1, "title": 1, "content": 1})
     async for doc in cursor:
         content = doc.get("content") or []
-        for i in range(len(content) - 1):
-            if content[i] == line:
-                results.append({
-                    "poemId": str(doc.get("_id")),
-                    "title": doc.get("title", ""),
-                    "next": content[i + 1],
-                })
+        for nxt in match_next_lines(content, line):
+            results.append({
+                "poemId": str(doc.get("_id")),
+                "title": doc.get("title", ""),
+                "next": nxt,
+            })
     return results
 
 
@@ -60,10 +65,8 @@ async def validate_chain(current: str, answer: str) -> bool:
     current = current.strip()
     cursor = poems_collection.find({"content": current}, {"content": 1})
     async for doc in cursor:
-        content = doc.get("content") or []
-        for i in range(len(content) - 1):
-            if content[i] == current and content[i + 1] == answer:
-                return True
+        if is_valid_next(doc.get("content") or [], current, answer):
+            return True
     return False
 
 
