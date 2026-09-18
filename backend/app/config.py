@@ -1,10 +1,13 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class Settings(BaseSettings):
+    # extra="ignore"：容忍 .env 里属于 docker-compose 的变量（如 WEB_PORT），避免启动崩溃
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     MONGODB_URI: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "poetrydb"
     HOST: str = "0.0.0.0"
@@ -36,9 +39,6 @@ class Settings(BaseSettings):
     VIDEO_API_KEY: str = ""
     VIDEO_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4/"
     VIDEO_MODEL: str = "cogvideox-flash"
-
-    class Config:
-        env_file = ".env"
 
 
 settings = Settings()
