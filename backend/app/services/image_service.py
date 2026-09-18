@@ -1,4 +1,6 @@
 """诗画互生服务 — 文生图 & 图生文"""
+import base64
+import io
 import logging
 import time
 from typing import Dict, Any
@@ -106,6 +108,45 @@ def _validate_image_data(image_base64: str) -> None:
         raise ValueError(f"不支持的图片格式: {mime}")
 
 
+_MAX_IMAGE_EDGE = 1024  # 图片最大边长（像素），超出则等比缩放
+_JPEG_QUALITY = 85  # 重编码 JPEG 质量
+
+
+def _compress_image(image_base64: str, max_edge: int = _MAX_IMAGE_EDGE, quality: int = _JPEG_QUALITY) -> str:
+    """解码 base64 图片，限制最大边长并重编码为 JPEG 以压缩体积。
+
+    返回 data URI 字符串。若 Pillow 未安装则原样返回（优雅降级）。
+    """
+    try:
+        from PIL import Image, ImageOps
+    except ImportError:
+        logger.warning("Pillow not installed, skip image compression")
+        return image_base64
+
+    data = image_base64
+    if data.startswith("data:"):
+        data = data.split(",", 1)[1] if "," in data else ""
+    if not data:
+        raise ValueError("空图片数据")
+
+    try:
+        raw = base64.b64decode(data)
+    except Exception as e:
+        raise ValueError(f"无效的 base64 图片数据: {e}") from e
+
+    img = Image.open(io.BytesIO(raw))
+    img = ImageOps.exif_transpose(img)  # 处理手机照片方向
+    if img.mode not in ("RGB", "L"):
+        img = img.convert("RGB")
+
+    if max(img.size) > max_edge:
+        img.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=quality)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
 async def generate_poem_from_image(
     image_base64: str,
     style: str = "古风",
@@ -122,6 +163,9 @@ async def generate_poem_from_image(
         {"poem": Poem, "scene_description": str}
     """
     _validate_image_data(image_base64)
+
+    # 压缩体积（限制最大边长 + 重编码 JPEG），再构建 data URI
+    image_base64 = _compress_image(image_base64)
 
     # 构建 data URI
     if not image_base64.startswith("data:"):
