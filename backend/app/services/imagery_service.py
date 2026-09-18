@@ -1,9 +1,7 @@
 """诗境漫游 — 意象分析服务"""
-import json
 import logging
-from app.config import settings
 from app.models.request import ImageryAnalyzeRequest
-from app.utils.llm import get_llm_client
+from app.utils.llm import chat_json, parse_llm_json
 
 logger = logging.getLogger(__name__)
 
@@ -48,33 +46,13 @@ async def analyze(req: ImageryAnalyzeRequest) -> dict:
         poem_desc = f"《{req.title}》" + (f" — {req.author}" if req.author else "") + f"\n{req.poem_text}"
 
     try:
-        client = get_llm_client()
-        resp = await client.chat.completions.create(
-            model=settings.LLM_MODEL,
-            messages=[
-                {"role": "system", "content": IMAGERY_SYSTEM_PROMPT},
-                {"role": "user", "content": f"请分析以下诗词的意象：\n\n{poem_desc}"},
-            ],
-            temperature=0.4,
-            max_tokens=3000,
-        )
-        raw = (resp.choices[0].message.content or "").strip()
-
-        # 处理 markdown 代码块包裹
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
-            raw = raw.rsplit("```", 1)[0]
-        raw = raw.strip()
-
-        data = json.loads(raw)
-        if "imagery_nodes" not in data or not isinstance(data["imagery_nodes"], list):
+        user_msg = f"请分析以下诗词的意象：\n\n{poem_desc}"
+        raw = await chat_json(IMAGERY_SYSTEM_PROMPT, user_msg, temperature=0.4, max_tokens=3000)
+        data = parse_llm_json(raw)
+        if not isinstance(data, dict) or "imagery_nodes" not in data or not isinstance(data["imagery_nodes"], list):
             raise ValueError("invalid response structure")
-
         return data
 
-    except json.JSONDecodeError as e:
-        logger.warning("Imagery analysis JSON parse failed: %s | raw: %s", e, raw[:200] if raw else "empty")
-        return _fallback_analysis(req)
     except Exception as e:
         logger.warning("Imagery analysis failed: %s (%s)", e, type(e).__name__)
         return _fallback_analysis(req)

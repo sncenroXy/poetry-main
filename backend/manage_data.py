@@ -8,11 +8,17 @@
   python manage_data.py clear             # 清空所有数据
 """
 import sys
+import os
 import json
 import pymongo
 
-client = pymongo.MongoClient("mongodb://localhost:27017")
-db = client["poetrydb"]
+# 确保能导入同目录的 app 包（可从任意目录运行）
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from app.config import settings
+
+client = pymongo.MongoClient(settings.MONGODB_URI)
+db = client[settings.DATABASE_NAME]
 poems = db["poems"]
 
 

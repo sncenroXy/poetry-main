@@ -1,12 +1,20 @@
 """FastAPI 主应用"""
+import logging
+import time
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import search_router, poem_router, challenge_router, generate_router, image_router, video_router, assistant_router, imagery_router, auth_router
 from app.database import poems_collection, ensure_indexes
 from app.models import Author, Analysis
 from app.middleware.security import security_middleware
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+request_logger = logging.getLogger("request")
 
 
 @asynccontextmanager
@@ -36,6 +44,16 @@ app.add_middleware(
 
 # 安全中间件：AI 接口鉴权 + 按 IP 限流
 app.middleware("http")(security_middleware)
+
+
+# 请求日志：记录方法、路径、状态码、耗时（便于观测 AI 接口耗时与成本）
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration_ms = (time.time() - start) * 1000
+    request_logger.info("%s %s -> %d (%.0fms)", request.method, request.url.path, response.status_code, duration_ms)
+    return response
 
 # 注册路由
 app.include_router(auth_router)

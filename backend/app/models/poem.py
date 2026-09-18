@@ -1,6 +1,6 @@
 """数据模型：Poem, Author, Analysis"""
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Author(BaseModel):
@@ -19,6 +19,8 @@ class Analysis(BaseModel):
 
 class Poem(BaseModel):
     """诗词实体"""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., description="唯一 ID", examples=["poem-1"])
     title: str = Field(..., description="诗词标题", examples=["静夜思"])
     author: Optional[Author] = Field(None, description="作者信息")
@@ -27,9 +29,6 @@ class Poem(BaseModel):
     content: List[str] = Field(default_factory=list, description="原文按行分割")
     analysis: Optional[Analysis] = Field(None, description="赏析信息")
     tags: List[str] = Field(default_factory=list, description="关键词/意象")
-
-    class Config:
-        populate_by_name = True
 
 
 class PoemInDB(Poem):

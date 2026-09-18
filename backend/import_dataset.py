@@ -14,14 +14,18 @@ import json
 import hashlib
 import pymongo
 
+# 确保能导入同目录的 app 包（可从任意目录运行）
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from app.config import settings
 from app.utils.tokenizer import tokenize
 
 # Windows 终端中文输出
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
 
-client = pymongo.MongoClient("mongodb://localhost:27017")
-db = client["poetrydb"]
+client = pymongo.MongoClient(settings.MONGODB_URI)
+db = client[settings.DATABASE_NAME]
 poems = db["poems"]
 
 # 朝代映射
