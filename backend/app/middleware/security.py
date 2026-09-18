@@ -102,14 +102,16 @@ async def security_middleware(request: Request, call_next):
                 content={"code": 0, "msg": "缺少或无效的 API Key", "data": None},
             )
 
-    # 2) 按 IP 限流（图/视频更严格）
+    # 2) 按 IP 限流（图/视频更严格；文本与图/视频分开计数，避免互相干扰）
     ip = _client_ip(request)
+    is_media = _is_media(path)
     limit = (
         settings.MEDIA_RATE_LIMIT_PER_MINUTE
-        if _is_media(path)
+        if is_media
         else settings.AI_RATE_LIMIT_PER_MINUTE
     )
-    if not _rate_limiter.allow(ip, limit):
+    key = f"{ip}:{'media' if is_media else 'text'}"
+    if not _rate_limiter.allow(key, limit):
         logger.warning("Rate limited: ip=%s path=%s", ip, path)
         return JSONResponse(
             status_code=429,
