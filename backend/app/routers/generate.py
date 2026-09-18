@@ -1,11 +1,12 @@
-"""生成路由：/api/generate/*"""
-from fastapi import APIRouter
+"""生成路由：/api/generate/*（需登录）"""
+from fastapi import APIRouter, Depends
 from app.services import generation_service
 from app.models import Poem, GenerationRequest, OptimizeRequest
 from app.utils import Result
+from app.utils.auth import get_current_user
 from typing import List
 
-router = APIRouter(prefix="/api/generate", tags=["生成"])
+router = APIRouter(prefix="/api/generate", tags=["生成"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("", summary="生成诗词（多版本）", response_model=Result[List[Poem]])

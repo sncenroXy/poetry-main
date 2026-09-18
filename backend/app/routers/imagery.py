@@ -1,12 +1,13 @@
-"""诗境漫游路由：/api/imagery/*"""
+"""诗境漫游路由：/api/imagery/*（需登录）"""
 import logging
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.services import imagery_service
 from app.models import ImageryAnalyzeRequest
 from app.utils import Result
+from app.utils.auth import get_current_user
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/imagery", tags=["诗境漫游"])
+router = APIRouter(prefix="/api/imagery", tags=["诗境漫游"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/analyze", summary="分析诗词意象")

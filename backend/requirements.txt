@@ -8,3 +8,4 @@ openai>=1.0.0
 jieba>=0.42.1
 pillow>=9.1.0
 json5>=0.9.14
+pyjwt>=2.8.0

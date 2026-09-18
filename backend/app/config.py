@@ -40,5 +40,10 @@ class Settings(BaseSettings):
     VIDEO_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4/"
     VIDEO_MODEL: str = "cogvideox-flash"
 
+    # JWT 鉴权
+    JWT_SECRET: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # token 有效期（默认 7 天）
+
 
 settings = Settings()

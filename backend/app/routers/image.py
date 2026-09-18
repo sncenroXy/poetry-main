@@ -1,10 +1,11 @@
-"""诗画互生路由"""
-from fastapi import APIRouter
+"""诗画互生路由（需登录）"""
+from fastapi import APIRouter, Depends
 from app.models import ImageGenerateRequest, ImagePoemRequest
 from app.utils import Result
 from app.services import image_service
+from app.utils.auth import get_current_user
 
-router = APIRouter(prefix="/api/image", tags=["诗画互生"])
+router = APIRouter(prefix="/api/image", tags=["诗画互生"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/generate", summary="文生图：诗词生成配图", response_model=Result)

@@ -7,6 +7,7 @@ db = client[settings.DATABASE_NAME]
 
 # 集合
 poems_collection = db["poems"]
+users_collection = db["users"]
 
 
 async def ensure_indexes():

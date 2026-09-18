@@ -1,10 +1,11 @@
-"""诗境动画路由"""
-from fastapi import APIRouter
+"""诗境动画路由（需登录）"""
+from fastapi import APIRouter, Depends
 from app.models import VideoGenerateRequest
 from app.utils import Result
 from app.services import video_service
+from app.utils.auth import get_current_user
 
-router = APIRouter(prefix="/api/video", tags=["诗境动画"])
+router = APIRouter(prefix="/api/video", tags=["诗境动画"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/generate", summary="提交视频生成任务", response_model=Result)

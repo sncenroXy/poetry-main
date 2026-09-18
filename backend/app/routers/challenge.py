@@ -1,5 +1,5 @@
 """挑战路由：/api/challenge/*"""
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from app.services import challenge_service
 from app.models import (
     ValidateRequest,
@@ -7,8 +7,12 @@ from app.models import (
     QuizExplainRequest, QuizSummaryRequest,
 )
 from app.utils import Result
+from app.utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/challenge", tags=["挑战"])
+
+# AI 增强端点需要登录；数据库端点（下句/校验/题库）保持公开
+_AUTH = [Depends(get_current_user)]
 
 
 # ---------- 原有端点 ----------
@@ -33,37 +37,37 @@ async def quiz(count: int = Query(3, ge=1, le=10, description="题目数量")):
 
 # ---------- AI 增强端点 ----------
 
-@router.post("/chain/ai-hint", summary="飞花令 AI 渐进提示")
+@router.post("/chain/ai-hint", summary="飞花令 AI 渐进提示", dependencies=_AUTH)
 async def chain_ai_hint(body: ChainHintRequest):
     data = await challenge_service.ai_hint(body.line, body.level)
     return Result.success(data)
 
 
-@router.post("/chain/ai-validate", summary="飞花令 AI 语义校验")
+@router.post("/chain/ai-validate", summary="飞花令 AI 语义校验", dependencies=_AUTH)
 async def chain_ai_validate(body: ChainAIValidateRequest):
     data = await challenge_service.ai_validate_chain(body.current, body.answer)
     return Result.success(data)
 
 
-@router.post("/chain/ai-turn", summary="飞花令 AI 对战回合")
+@router.post("/chain/ai-turn", summary="飞花令 AI 对战回合", dependencies=_AUTH)
 async def chain_ai_turn(body: ChainAITurnRequest):
     data = await challenge_service.ai_chain_turn(body.current)
     return Result.success(data)
 
 
-@router.post("/quiz/ai-generate", summary="AI 生成多种题型")
+@router.post("/quiz/ai-generate", summary="AI 生成多种题型", dependencies=_AUTH)
 async def quiz_ai_generate(count: int = Query(5, ge=1, le=10, description="题目数量")):
     data = await challenge_service.ai_generate_quiz(count)
     return Result.success(data)
 
 
-@router.post("/quiz/ai-explain", summary="AI 解析单题")
+@router.post("/quiz/ai-explain", summary="AI 解析单题", dependencies=_AUTH)
 async def quiz_ai_explain(body: QuizExplainRequest):
     data = await challenge_service.ai_explain_answer(body.question, body.user_answer)
     return Result.success(data)
 
 
-@router.post("/quiz/ai-summary", summary="AI 答题总结分析")
+@router.post("/quiz/ai-summary", summary="AI 答题总结分析", dependencies=_AUTH)
 async def quiz_ai_summary(body: QuizSummaryRequest):
     data = await challenge_service.ai_quiz_summary(body.results)
     return Result.success(data)

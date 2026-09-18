@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import search_router, poem_router, challenge_router, generate_router, image_router, video_router, assistant_router, imagery_router
+from app.routers import search_router, poem_router, challenge_router, generate_router, image_router, video_router, assistant_router, imagery_router, auth_router
 from app.database import poems_collection, ensure_indexes
 from app.models import Author, Analysis
 from app.middleware.security import security_middleware
@@ -38,6 +38,7 @@ app.add_middleware(
 app.middleware("http")(security_middleware)
 
 # 注册路由
+app.include_router(auth_router)
 app.include_router(search_router)
 app.include_router(poem_router)
 app.include_router(challenge_router)
