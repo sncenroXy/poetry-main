@@ -9,6 +9,12 @@ const routes = [
     component: () => import('@/views/auth/LoginView.vue'),
     meta: { title: '登录', guest: true }
   },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/auth/RegisterView.vue'),
+    meta: { title: '注册', guest: true }
+  },
   // 学：鉴赏模块
   {
     path: '/',
@@ -64,31 +70,31 @@ const routes = [
     path: '/create',
     name: 'Generate',
     component: () => import('@/views/create/GenerateView.vue'),
-    meta: { title: '诗词生成' }
+    meta: { title: '诗词生成', requiresAuth: true }
   },
   {
     path: '/create/mimic',
     name: 'Mimic',
     component: () => import('@/views/create/MimicView.vue'),
-    meta: { title: '仿写工坊' }
+    meta: { title: '仿写工坊', requiresAuth: true }
   },
   {
     path: '/create/image',
     name: 'ImageCreate',
     component: () => import('@/views/create/ImageView.vue'),
-    meta: { title: '诗画互生' }
+    meta: { title: '诗画互生', requiresAuth: true }
   },
   {
     path: '/create/video',
     name: 'VideoCreate',
     component: () => import('@/views/create/VideoView.vue'),
-    meta: { title: '诗境动画' }
+    meta: { title: '诗境动画', requiresAuth: true }
   },
   {
     path: '/explore/imagery',
     name: 'Imagery',
     component: () => import('@/views/explore/ImageryView.vue'),
-    meta: { title: '诗境漫游' }
+    meta: { title: '诗境漫游', requiresAuth: true }
   },
   // 404
   {
@@ -103,9 +109,16 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 })
 })
 
-// 路由守卫（预留认证逻辑）
+// 路由守卫：requiresAuth 路由需登录；guest 路由登录后跳回首页
 router.beforeEach((to) => {
   document.title = to.meta.title ? `${to.meta.title} - 诗词雅韵` : '诗词雅韵'
+  const userStore = useUserStore()
+  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+    return { path: '/login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.guest && userStore.isLoggedIn) {
+    return { path: '/' }
+  }
 })
 
 export default router

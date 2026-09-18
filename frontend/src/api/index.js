@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getToken, removeToken } from '@/utils/storage'
+import { getToken, clearAll } from '@/utils/storage'
 import { showToast } from 'vant'
 
 const request = axios.create({
@@ -45,8 +45,10 @@ request.interceptors.response.use(
     if (error.response) {
       const { status } = error.response
       if (status === 401) {
-        removeToken()
-        showToast('登录已过期，请重新登录')
+        clearAll()
+        showToast('请先登录')
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+        window.location.href = `/login?redirect=${redirect}`
       }
       // 其他 HTTP 错误（如 500）不弹 toast，交给组件处理
     }
