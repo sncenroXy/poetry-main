@@ -1,4 +1,6 @@
 """认证路由：注册 / 登录 / 当前用户"""
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
@@ -32,6 +34,13 @@ async def register(body: AuthRequest):
     await users_collection.insert_one({
         "_id": username,
         "password_hash": hash_password(body.password),
+        "display_name": username,
+        "bio": "",
+        "role": "user",
+        "preferred_dynasties": [],
+        "preferred_genres": [],
+        "preferred_tags": [],
+        "created_at": datetime.now(timezone.utc),
     })
     return Result.success(_issue(username))
 

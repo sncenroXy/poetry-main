@@ -99,6 +99,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { mimicPoem } from '@/api/generate'
+import { saveCreation } from '@/api/user'
 import PoemText from '@/components/poetry/PoemText.vue'
 import { showToast } from 'vant'
 
@@ -123,6 +124,12 @@ async function doMimic() {
       style: style.value
     })
     result.value = data
+    saveCreation({
+      creation_type: 'mimic',
+      title: data.title || '无题',
+      content: Array.isArray(data.content) ? data.content : [],
+      metadata: { emotion: emotion.value, style: style.value },
+    }).catch(() => {})
   } catch {
     showToast('仿写失败，请稍后再试')
   } finally {

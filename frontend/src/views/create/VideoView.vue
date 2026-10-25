@@ -4,6 +4,7 @@
     <div class="content-container pt-6 pb-4">
       <h1 class="text-[24px] lg:text-[32px] font-semibold text-ink tracking-tight">诗境动画</h1>
       <p class="text-ink-light text-[15px] mt-1">以诗词意境生成短视频</p>
+      <p v-if="videoAvailable === false" class="capability-warning mt-3">视频生成服务尚未配置，请联系管理员完善 VIDEO_API_KEY。</p>
     </div>
 
     <div class="content-container py-4">
@@ -51,7 +52,7 @@
             color="#c8851a"
             size="large"
             style="border-radius: 12px"
-            :disabled="!poemText.trim() || status === 'processing'"
+            :disabled="!poemText.trim() || status === 'processing' || videoAvailable === false"
             :loading="submitting"
             :loading-text="submitLoadingText"
             @click="doSubmit"
@@ -170,12 +171,24 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { submitVideoTask, queryVideoStatus } from '@/api/video'
+import { saveCreation } from '@/api/user'
+import { getCapabilities } from '@/api/system'
 import { showToast } from 'vant'
 
 const router = useRouter()
+const videoAvailable = ref(null)
+
+onMounted(async () => {
+  try {
+    const data = await getCapabilities()
+    videoAvailable.value = Boolean(data.video_generation?.available)
+  } catch {
+    // 状态接口不可用时不阻断原有功能。
+  }
+})
 
 const videoStyles = ['水墨国风', '青绿山水', '工笔重彩', '写意泼墨']
 
@@ -246,6 +259,13 @@ function startPolling() {
         videoUrl.value = data.video_url || ''
         status.value = 'completed'
         stopPolling()
+        saveCreation({
+          creation_type: 'video',
+          title: title.value || '诗境动画',
+          content: poemText.value.split('\n').filter(Boolean),
+          asset_url: videoUrl.value || null,
+          metadata: { style: style.value, task_id: taskId.value },
+        }).catch(() => {})
       } else if (data.status === 'failed') {
         status.value = 'failed'
         stopPolling()
@@ -293,6 +313,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.capability-warning {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(229, 77, 66, 0.08);
+  color: #b33b33;
+  font-size: 13px;
+}
+
 /* 视频播放器 */
 .video-frame {
   border-radius: 12px;

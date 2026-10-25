@@ -25,6 +25,7 @@
 | 诗境漫游 | AI 意象分析 + 星图可视化，沉浸式探索诗词意象网络 |
 | 诗境动画 | 基于诗词意境生成短视频（智谱 CogVideoX） |
 | AI 诗词助手 | 首页对话式 AI 助手，支持诗词赏析、典故解说、学习答疑 |
+| 我的学习 | 用户资料、诗词收藏、阅读历史、练习统计、创作记录和个性化推荐 |
 
 ## 快速开始 (本地开发)
 
@@ -138,6 +139,21 @@ bash deploy.sh status   # 查看状态
 
 ## API 接口
 
+### 认证与用户中心
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/auth/register` | 注册并签发 JWT |
+| POST | `/api/auth/login` | 登录并签发 JWT |
+| GET/PUT | `/api/user/profile` | 获取或更新用户资料与诗词偏好 |
+| GET/POST/DELETE | `/api/user/favorites` | 查询、添加或取消诗词收藏 |
+| GET/POST | `/api/user/history` | 查询或记录阅读历史 |
+| POST | `/api/user/learning/events` | 记录答题与飞花令结果 |
+| GET | `/api/user/learning/summary` | 获取正确率、积分和薄弱题型 |
+| GET/POST | `/api/user/creations` | 查询或保存创作记录 |
+| GET | `/api/user/recommendations` | 根据收藏、阅读和偏好推荐诗词 |
+| GET | `/api/system/capabilities` | 查询文本、图片、视觉和视频服务配置状态 |
+
 ### 检索与浏览
 
 | 方法 | 路径 | 说明 |
@@ -210,6 +226,7 @@ bash deploy.sh status   # 查看状态
 | `CORS_ORIGINS` | 跨域白名单（逗号分隔） | `http://localhost:5173` |
 | `AI_RATE_LIMIT_PER_MINUTE` | AI 文本接口限流（次/分钟/IP） | `30` |
 | `MEDIA_RATE_LIMIT_PER_MINUTE` | 图/视频接口限流（次/分钟/IP） | `10` |
+| `JWT_SECRET` | 用户登录令牌签名密钥，生产环境必须修改 | `change-me-in-production` |
 | `LLM_API_KEY` | 文本生成 API Key | - |
 | `LLM_BASE_URL` | 文本生成 API 地址 | `https://api.openai.com/v1` |
 | `LLM_MODEL` | 文本生成模型 | `gpt-4o-mini` |

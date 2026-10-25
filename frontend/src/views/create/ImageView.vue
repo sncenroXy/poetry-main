@@ -4,6 +4,7 @@
     <div class="content-container pt-6 pb-4">
       <h1 class="text-[24px] lg:text-[32px] font-semibold text-ink tracking-tight">诗画互生</h1>
       <p class="text-ink-light text-[15px] mt-1">以诗绘画，以画赋诗</p>
+      <p v-if="capabilityWarning" class="capability-warning mt-3">{{ capabilityWarning }}</p>
     </div>
 
     <!-- Tab 切换 -->
@@ -68,7 +69,7 @@
             color="#c8851a"
             size="large"
             style="border-radius: 12px"
-            :disabled="!t2i.poemText.trim()"
+            :disabled="!t2i.poemText.trim() || imageAvailable === false"
             :loading="t2i.loading"
             :loading-text="t2i.loadingText"
             @click="doGenerateImage"
@@ -195,7 +196,7 @@
             color="#c8851a"
             size="large"
             style="border-radius: 12px"
-            :disabled="!i2t.imageBase64"
+            :disabled="!i2t.imageBase64 || visionAvailable === false"
             :loading="i2t.loading"
             :loading-text="i2t.loadingText"
             @click="doGeneratePoem"
@@ -247,15 +248,34 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateImage, generatePoemFromImage } from '@/api/image'
+import { saveCreation } from '@/api/user'
+import { getCapabilities } from '@/api/system'
 import PoemText from '@/components/poetry/PoemText.vue'
 import { showToast } from 'vant'
 
 const router = useRouter()
 
 const activeTab = ref('text2img')
+const imageAvailable = ref(null)
+const visionAvailable = ref(null)
+const capabilityWarning = computed(() => {
+  if (activeTab.value === 'text2img' && imageAvailable.value === false) return '图片生成服务尚未配置，请联系管理员完善 IMAGE_API_KEY。'
+  if (activeTab.value === 'img2text' && visionAvailable.value === false) return '视觉理解服务尚未配置，请联系管理员完善 VISION_API_KEY。'
+  return ''
+})
+
+onMounted(async () => {
+  try {
+    const data = await getCapabilities()
+    imageAvailable.value = Boolean(data.image_generation?.available)
+    visionAvailable.value = Boolean(data.vision?.available)
+  } catch {
+    // 状态接口不可用时不阻断原有功能。
+  }
+})
 
 const imageStyles = ['水墨国风', '工笔花鸟', '青绿山水', '写意泼墨']
 const poemStyles = ['唐诗', '宋词', '古风']
@@ -290,6 +310,13 @@ async function doGenerateImage() {
       style: t2i.style,
     })
     t2i.result = data
+    saveCreation({
+      creation_type: 'image',
+      title: data.title || t2i.title || '诗词配图',
+      content: t2i.poemText.split('\n').filter(Boolean),
+      asset_url: data.image_url || null,
+      metadata: { style: t2i.style },
+    }).catch(() => {})
   } catch {
     showToast('图片生成失败，请稍后再试')
   } finally {
@@ -372,6 +399,14 @@ async function doGeneratePoem() {
       emotion: i2t.emotion,
     })
     i2t.result = data
+    if (data.poem) {
+      saveCreation({
+        creation_type: 'poem',
+        title: data.poem.title || '看图写诗',
+        content: Array.isArray(data.poem.content) ? data.poem.content : [],
+        metadata: { source: 'vision', style: i2t.style, emotion: i2t.emotion },
+      }).catch(() => {})
+    }
   } catch {
     showToast('诗词生成失败，请稍后再试')
   } finally {
@@ -393,6 +428,14 @@ function sharePoem() {
 </script>
 
 <style scoped>
+.capability-warning {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(229, 77, 66, 0.08);
+  color: #b33b33;
+  font-size: 13px;
+}
+
 /* Tab 切换栏 */
 .tab-bar {
   display: inline-flex;

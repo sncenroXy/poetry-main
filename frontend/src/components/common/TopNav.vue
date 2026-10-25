@@ -33,12 +33,14 @@ const router = useRouter()
 const tabs = [
   { name: 'home', label: '鉴赏', path: '/' },
   { name: 'challenge', label: '挑战', path: '/challenge' },
-  { name: 'create', label: '创作', path: '/create' }
+  { name: 'create', label: '创作', path: '/create' },
+  { name: 'profile', label: '我的', path: '/profile' }
 ]
 
 const activeTab = computed(() => {
   if (route.path.startsWith('/challenge')) return 'challenge'
   if (route.path.startsWith('/create')) return 'create'
+  if (route.path.startsWith('/profile')) return 'profile'
   return 'home'
 })
 

@@ -207,11 +207,26 @@
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAIHint, aiValidateChain, aiChainTurn } from '@/api/challenge'
+import { recordLearningEvent, addWrongAnswer } from '@/api/user'
 import { useChallengeStore } from '@/stores/challenge'
+import { useUserStore } from '@/stores/user'
 import { showToast } from 'vant'
 
 const router = useRouter()
 const challengeStore = useChallengeStore()
+const userStore = useUserStore()
+
+function persistChainResult(correct, source = '') {
+  if (!userStore.isLoggedIn) return
+  recordLearningEvent({
+    event_type: 'chain',
+    correct,
+    score: correct ? 10 : 0,
+    question_type: challengeStore.chainMode === 'ai' ? 'ai_chain' : 'classic_chain',
+    source,
+    tags: [],
+  }).catch(() => {})
+}
 
 // ---------- 模式切换 ----------
 const mode = ref(challengeStore.chainMode)
@@ -265,6 +280,16 @@ async function submitClassic() {
       challengeStore.addChainScore(10)
     } else {
       challengeStore.resetChainStreak()
+    }
+    persistChainResult(Boolean(data.correct), data.source_title || '')
+    if (!data.correct && userStore.isLoggedIn) {
+      addWrongAnswer({
+        type: 'chain',
+        question: currentLine.value,
+        user_answer: userAnswer.value.trim(),
+        correct_answer: data.correct_answer || '',
+        source: data.source_title ? `出自《${data.source_title}》` : '',
+      }).catch(() => {})
     }
   } catch {
     showToast('校验失败，请重试')
@@ -339,6 +364,7 @@ async function submitAITurn() {
       // 调用 AI，让它给出正确答案并出新题
       const questionLine = lastQuestion ? lastQuestion.content : input
       const data = await aiChainTurn(questionLine)
+      persistChainResult(false, lastQuestion?.title || '')
 
       // AI 告知正确答案
       challengeStore.addChainMessage({
@@ -397,6 +423,7 @@ async function submitAITurn() {
     })
 
     challengeStore.addChainScore(10)
+    persistChainResult(true, data.ai_answer_title || '')
 
     // AI 出新题
     if (data.new_line) {

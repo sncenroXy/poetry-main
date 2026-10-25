@@ -3,7 +3,7 @@ import json
 import logging
 import random
 import uuid
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.database import poems_collection
 from app.utils.llm import chat_json, parse_llm_json
 
@@ -328,10 +328,19 @@ AI_QUIZ_SYSTEM = """你是一位古典诗词出题专家。请根据要求生成
 只返回 JSON 数组，不要其他内容。"""
 
 
-async def ai_generate_quiz(count: int = 5) -> List[Dict[str, Any]]:
+async def ai_generate_quiz(count: int = 5, focus_types: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """AI 生成多种题型的选择题"""
     try:
         user_msg = f"请生成 {count} 道诗词选择题，题型随机混合，难度适中。"
+        if focus_types:
+            labels = {
+                "fill_blank": "诗句填空",
+                "next_line": "上下句衔接",
+                "author": "作者识别",
+                "sentiment": "意境判断",
+            }
+            focus = "、".join(labels.get(item, item) for item in focus_types[:3])
+            user_msg += f"用户在以下题型较薄弱，请优先覆盖但不要全部重复同一题型：{focus}。"
         raw = await _chat(AI_QUIZ_SYSTEM, user_msg, temperature=0.9)
         questions = parse_llm_json(raw)
         if isinstance(questions, list):

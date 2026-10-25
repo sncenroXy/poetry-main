@@ -7,5 +7,7 @@ from .video import router as video_router
 from .assistant import router as assistant_router
 from .imagery import router as imagery_router
 from .auth import router as auth_router
+from .user import router as user_router
+from .system import router as system_router
 
-__all__ = ["search_router", "poem_router", "challenge_router", "generate_router", "image_router", "video_router", "assistant_router", "imagery_router", "auth_router"]
+__all__ = ["search_router", "poem_router", "challenge_router", "generate_router", "image_router", "video_router", "assistant_router", "imagery_router", "auth_router", "user_router", "system_router"]

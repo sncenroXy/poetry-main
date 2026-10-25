@@ -9,6 +9,9 @@
     <van-tabbar-item name="create" icon="edit" @click="go('/create')">
       <span class="font-kai text-xs">创作</span>
     </van-tabbar-item>
+    <van-tabbar-item name="profile" icon="user-o" @click="go('/profile')">
+      <span class="font-kai text-xs">我的</span>
+    </van-tabbar-item>
   </van-tabbar>
 </template>
 
@@ -22,6 +25,7 @@ const router = useRouter()
 const active = computed(() => {
   if (route.path.startsWith('/challenge')) return 'challenge'
   if (route.path.startsWith('/create')) return 'create'
+  if (route.path.startsWith('/profile')) return 'profile'
   return 'home'
 })
 

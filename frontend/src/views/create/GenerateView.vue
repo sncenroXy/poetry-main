@@ -173,6 +173,7 @@
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { generatePoem, optimizePoem } from '@/api/generate'
+import { saveCreation } from '@/api/user'
 import PoemText from '@/components/poetry/PoemText.vue'
 import { showToast } from 'vant'
 
@@ -239,6 +240,17 @@ async function doGenerate() {
 
     const data = await generatePoem(params)
     results.value = Array.isArray(data) ? data : [data]
+    await Promise.allSettled(results.value.map(poem => saveCreation({
+      creation_type: 'poem',
+      title: poem.title || '无题',
+      content: Array.isArray(poem.content) ? poem.content : [],
+      metadata: {
+        genre: poem.genre || '',
+        emotion: form.emotion,
+        style: form.style,
+        images: [...form.images],
+      },
+    })))
   } catch {
     showToast('生成失败，请稍后再试')
   } finally {

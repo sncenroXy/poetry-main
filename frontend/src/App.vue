@@ -26,7 +26,7 @@ import SideNav from '@/components/common/SideNav.vue'
 const route = useRoute()
 
 const showNav = computed(() => {
-  return !route.path.startsWith('/login')
+  return !route.path.startsWith('/login') && !route.path.startsWith('/register')
 })
 </script>
 

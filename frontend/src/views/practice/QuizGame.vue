@@ -182,7 +182,8 @@
             </svg>
           </div>
           <h3 class="text-[20px] font-semibold text-ink mb-2">AI 诗词答题</h3>
-          <p class="text-ink-light text-[14px] mb-6">AI 将生成多种题型，全面考验你的诗词知识</p>
+          <p class="text-ink-light text-[14px] mb-2">AI 将生成多种题型，全面考验你的诗词知识</p>
+          <p v-if="userStore.isLoggedIn" class="text-[12px] text-primary mb-4">登录用户将根据历史薄弱题型获得针对性练习</p>
           <p class="text-[12px] text-ink-light mb-6">题型包括：诗句填空 · 上下句配对 · 作者识别 · 意境判断</p>
           <van-button color="#c8851a" size="large" style="border-radius: 12px" @click="startQuiz">开始答题</van-button>
         </div>
@@ -198,12 +199,15 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAIQuiz, aiExplainAnswer, aiQuizSummary } from '@/api/challenge'
+import { getAdaptiveQuiz, recordLearningEvent, addWrongAnswer } from '@/api/user'
 import { useChallengeStore } from '@/stores/challenge'
+import { useUserStore } from '@/stores/user'
 import Loading from '@/components/common/Loading.vue'
 import { showToast } from 'vant'
 
 const router = useRouter()
 const challengeStore = useChallengeStore()
+const userStore = useUserStore()
 
 const typeLabels = {
   fill_blank: '填空',
@@ -235,6 +239,7 @@ const summaryLoadingText = ref(summaryLoadingTexts[0])
 // 加载动画
 const loadingTexts = ['AI 正在出题…', '精选诗词题目中…', '构思干扰选项中…']
 const loadingText = ref(loadingTexts[0])
+const focusTypes = ref([])
 
 const currentQuestion = computed(() => questions.value[currentIndex.value] || null)
 const isCorrect = computed(() => selected.value === currentQuestion.value?.answer)
@@ -276,6 +281,26 @@ function selectOption(idx) {
     type: q.type || 'fill_blank',
     source: q.source || '',
   })
+
+  if (userStore.isLoggedIn) {
+    recordLearningEvent({
+      event_type: 'quiz',
+      correct,
+      score: correct ? 10 : 0,
+      question_type: q.type || 'fill_blank',
+      source: q.source || '',
+      tags: [],
+    }).catch(() => {})
+    if (!correct) {
+      addWrongAnswer({
+        type: 'quiz',
+        question: q.question,
+        user_answer: q.options[idx] || '',
+        correct_answer: q.options[q.answer] || '',
+        source: q.source || '',
+      }).catch(() => {})
+    }
+  }
 
   // 请求 AI 解析
   fetchExplanation(q, idx)
@@ -362,8 +387,15 @@ async function startQuiz() {
   }, 1500)
 
   try {
-    const data = await getAIQuiz(5)
-    questions.value = Array.isArray(data) ? data : []
+    if (userStore.isLoggedIn) {
+      const data = await getAdaptiveQuiz(5)
+      questions.value = Array.isArray(data?.items) ? data.items : []
+      focusTypes.value = data?.focus_types || []
+    } else {
+      const data = await getAIQuiz(5)
+      questions.value = Array.isArray(data) ? data : []
+      focusTypes.value = []
+    }
   } catch {
     questions.value = []
     showToast('出题失败，请稍后再试')

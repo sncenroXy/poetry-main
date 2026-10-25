@@ -46,6 +46,18 @@ const routes = [
     component: () => import('@/views/learn/AuthorView.vue'),
     meta: { title: '作者' }
   },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/user/ProfileView.vue'),
+    meta: { title: '我的学习', requiresAuth: true }
+  },
+  {
+    path: '/profile/wrong-answers',
+    name: 'WrongAnswers',
+    component: () => import('@/views/user/WrongAnswersView.vue'),
+    meta: { title: '错题本', requiresAuth: true }
+  },
   // 练：挑战模块
   {
     path: '/challenge',

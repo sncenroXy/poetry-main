@@ -53,6 +53,8 @@ const IconImage = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg'
 const IconVideo = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('path', { d: 'M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z' }), h('circle', { cx: '12', cy: '13', r: '3' })]) }
 
 const IconCompass = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('circle', { cx: '12', cy: '12', r: '10' }), h('polygon', { points: '16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76' })]) }
+const IconUser = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('circle', { cx: '12', cy: '8', r: '4' }), h('path', { d: 'M4 21a8 8 0 0 1 16 0' })]) }
+const IconError = { render: () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('path', { d: 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z' }), h('path', { d: 'M12 9v4' }), h('path', { d: 'M12 17h.01' })]) }
 
 const sections = [
   {
@@ -81,6 +83,14 @@ const sections = [
       { name: '仿写工坊', path: '/create/mimic', icon: IconWand },
       { name: '诗画互生', path: '/create/image', icon: IconImage },
       { name: '诗境动画', path: '/create/video', icon: IconVideo }
+    ]
+  },
+  {
+    name: 'user',
+    label: '我的',
+    items: [
+      { name: '我的学习', path: '/profile', icon: IconUser },
+      { name: '错题本', path: '/profile/wrong-answers', icon: IconError }
     ]
   }
 ]
